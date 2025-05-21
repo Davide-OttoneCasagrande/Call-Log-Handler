@@ -89,38 +89,36 @@ a list of json callLog class objects exposed by an interface
 </details>
 
 #### <a name="cd"></a>  3.1.1 Class diagram
-
-:::mermaid
-
+::: mermaid
 classDiagram
 
-    CSVLoader ..|> LogCollectorToJson
-    LogCollectorToJson *-- CallLog
-    LogCollectorToJson -- IToDataStore
+    CSVLoader ..|> LogCollector
+    LogCollector *-- CallLog
+    LogCollector -- IToDataStore
 
     class CSVLoader {
-        df CSVLoader(filePath)
+        +CSVLoader(filePath):df
     }
 
-    class LogCollectorToJson {
-        +list CallLogs 
-        __init(df)
+    class LogCollector {
+        list CallLogs 
+        +__init__(df)
+        +tojson():list
     }
 
-    class CallLog {
-        +str timestamp
-        +str caller
-        +str receiver
-        +int duration
-        +str status
-        +str UniqueCallReference
-        __init__()
+    class CallLog {
+        datetime timestamp
+        str caller
+        str receiver
+        int duration
+        str status
+        str UniqueCallReference
+        +__init__()
     }
 
     class IToDataStore {
     }
 :::
-
 ##### <a name="cd-description"></a>  3.1.1.1 Class Description
 - CSVLoader
     - load the csv file given a filePath
