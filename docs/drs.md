@@ -97,13 +97,13 @@ classDiagram
     LogCollector -- IToDataStore
 
     class CSVLoader {
-        +CSVLoader(filePath):df
+        +CSVLoader(filePath)
     }
 
     class LogCollector {
         list CallLogs 
         +__init__(df)
-        +tojson():list
+        +tojson()
     }
 
     class CallLog {
