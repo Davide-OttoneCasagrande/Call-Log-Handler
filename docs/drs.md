@@ -30,33 +30,38 @@ Version | Data | Author(s)| Notes
             1. [Class Description](#cd-description)
 
 ##  <a name="intro"></a>  1 Introduction
-Design, develop, and demonstrate a simple "demo" application built using the Python programming language that performs the following functionalities:
-- Receive as input/configuration the path to a folder in the filesystem containing files in CSV format that represent telephone call log data (call-log).
-- Identify the files, open them, and extract the call-log data.
+Design, implement, and demonstrate a simple "demo" application developed using the Python programming language that performs the following functionalities:
+
+- Accept as input/configuration the path to a folder in the filesystem containing files in CSV format, which represent call log data.
+- Identify the files, open them, and extract the call log data.
 - Structure the data into JSON dictionaries.
-- Persist this data in an external datastore.  
-It is not necessary to implement the external datastore itself, as it will be managed by a library developed by a third party (external company). The external company may implement the datastore using various heterogeneous technologies, e.g., a simple file on the filesystem or a NoSQL database (e.g., MongoDB), etc.  
-When defining the solution, consider that different installations might require different technologies (e.g., file-based implementation in one case, NoSQL DB in another). Therefore, evaluate what kind of abstraction should be implemented for the library to support a potential evolutionary path where different implementations using different technologies for the external datastore can be developed and used. Also, evaluate what requirements/specifications should be requested/provided to the external company that will develop the persistent datastore management libraries.
+- Persist this data in an external datastore.
+
+> It is **not necessary** to implement the external datastore itself, as it will be managed by a library developed by a third party (external company).  
+> The external company may implement the datastore using various heterogeneous technologies, e.g., a simple file on the filesystem or a NoSQL database (e.g., MongoDB), etc.  
+> When designing the solution, consider that different installations might require different technologies (e.g., file-based in one case, NoSQL DB in another).
+
+Therefore, evaluate:
+- What kind of abstraction should be implemented for the library to support a potentially evolving path where different implementations using different technologies for the external datastore will be developed and used.
+- What requirements/specifications should be requested/provided to the external company that will develop the persistent datastore management libraries.
+
 
 ### <a name="tech"></a> 1.1 Technologies used
 - Pyhton
 
 ### <a name="constraints"></a> 1.2 Assumption and Constraint 
-- Carry out a design phase before developing the application.  
-You are free to choose the method of describing the design, which must be reviewed together with the tutors before starting development activities.
-- Use an object-oriented design approach;  
-    in particular, aim for a modular design based on the "separation of concerns" paradigm.
+- Carry out a **design phase** before developing the application. You are free to choose the method of describing the design, which will be reviewed with the tutors before starting development activities.
+- Use an **object-oriented design approach**; in particular, aim for a **modular design** based on the **"separation of concerns"** paradigm.
 - A simple design could be based on:
-    - A table that identifies each class in the application along with a textual description of the responsibilities of each class.
-    - A description, even textual, of the main interactions expected between the classes.
+    - A table defining each class that makes up the application, along with a textual description of the responsibilities of each class.
+    - A description, even textual, of the **macro-interactions** expected between the classes.
 - Try to structure the source code in a way that is consistent with the modularity of the design.
-- The use of ChatGPT is allowed only for:
-    - Specific support related to language syntax,
-    - Use of Python libraries for reading CSV files and managing JSON dictionaries,
-    - Learning about general object-oriented topics (e.g., modularity/separation of concerns),
-    - Use of a Python development environment (IDE).
-- ChatGPT **is NOT allowed** for defining the overall structure of the application.
-   
+- The use of ChatGPT is allowed **only** for:
+    - Specific support related to language syntax.
+    - Use of Python libraries for reading CSV files and handling JSON dictionaries.
+    - Learning about general OO topics (e.g., modularity/separation of concerns).
+    - Using a Python development environment (IDE).
+- **ChatGPT is NOT allowed** for defining the **overall structure** of the application.   
 
 ## <a name="system-overview"></a>  2 System Overview
 

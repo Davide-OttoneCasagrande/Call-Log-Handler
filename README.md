@@ -1,59 +1,71 @@
 # Call-Log-Handler
 
-### CONSEGNA:
-Progettare, realizzare e dimostrare un semplice applicativo "demo" realizzato utilizzando il linguaggio python che realizzi le seguenti funzionalità:  
-- ricevere in ingresso/configurazione le coordinate di un folder del filesysem contenente file in formato csv che rappresentano dati di log di chiamate telefoniche (call-log)  
-- identificare i file, aprirli ed estrarre i dati di call-log  
-- strutturare i dati in dizionari json  
-- rendere persistenti tali dati in un datastore esterno.  
-    Non è necessario realizzare l'implementazione del datastore esterno, che verrà gestito da una libreria il cui sviluppo verrà affidato ad una terza parte (società esterna). La società esterna potrà realizzare il datastore utilizzando più tecnologie eterogenee, e.g. un semplice file su filesystem oppure un database NO-SQL (e.g. MongoDb) etc. Nella definizione tenere conto che in installati differenti si potrebbero volere usare tecinolige differenti (e.g in un caso l'implementazione su file, in un altro l'implementazione su DB NO-SQL).  
-    Valutare quindi quale astrazione realizzare della libreria per ipotizzare un percorso, anche evolutivo, in cui si realizzeranno ed utilizzeranno differenti implementazioni su differenti tecnologie del datastore esterno. Valutare quali richieste/specifiche fare/fornire alla società esterna che realizzera la/le librerie di gestione del datastore
-    persistente.
+### TASK:
 
-### DETTAGLIO
-- Obiettivo:
-    - Realizzare un'applicazione che:
-        - Legga i file CSV da una directory.
-        - Converta i dati in dizionari JSON-like.
-        - Li salvi in un data store usando una libreria esterna fornita da terze parti
-            che esponga un servzio di gestione della persistenza:
-    - Rispettare i seguenti Requisiti di Design:
-        - Separare chiaramente:
-            - Parsing dei file CSV.
-            - Modellazione delle chiamate (CallLog come entità OOP).
-            - Interfaccia di accesso al DataStore.
-            - Flusso di controllo generale dell’applicazione.
-        - Progettare classi con responsabilità singole e coesive.
-        - Utilizzare dizionari per la serializzazione JSON dei dati.
+Design, implement, and demonstrate a simple "demo" application developed using the Python programming language that performs the following functionalities:
 
-### VINCOLI
-- svolgere una attività di progettazione prima di realizzare l'applicativo. Scegliere in libertà le modalità di descrizione della progettazione, da rivedere assieme ai tutor prima di iniziare le attività di sviluppo.
-- utilizzare una modalità di progettazione Object oriented; in particolare sforzarsi di indirizzare un design modulare che si basi sul paradigma del "separation of concerns" (separazione di responsabilità)
-- Una semplice progettazione potrebbe essere basata su
-    - definizione di una tabella che identifichi ogni classe che compone l'applicativo ed una descrizione testuale delle responsabilità di tale classe
-    - una descrizione, anche testuale, delle macro-interazioni previste fra le classi
-- tentare di realizzare anche una strutturazione dei sorgenti coerente con la modularità del design
-- è consentito l'uso di chatGPT solamente per
-    - supporto puntuale relativo alla sintassi del linguaggio,
-    - utilizzo di libreria python per lettura file csv e per gestione dizionari json
-    - formazione su tematiche generali OO (e.g. modularità/separation of concerns)
-    - uso di un ambiente di sviluppo (IDE) python
-- **NON é consentito** l'uso di ChatGPT per la definizione della struttura generale dell'applicativo
+- Accept as input/configuration the path to a folder in the filesystem containing files in CSV format, which represent call log data.
+- Identify the files, open them, and extract the call log data.
+- Structure the data into JSON dictionaries.
+- Persist this data in an external datastore.
 
-### RAZIONALE DELL'ESERCIZIO
--sperimentare tecniche di progettazione OO
--sperimentare il setup di un ambiente di sviluppo e la definizione della struttura del software
--sperimentare semplici tecniche di acquisizione e parsing dei dati
--sperimentare semplici tecniche di modellizzazione del dato e di trasformazione in dizionari serializzabili JSON
--sperimentare le modalità di definizione di interazione con componenti sviluppati da terze parti
+> It is **not necessary** to implement the external datastore itself, as it will be managed by a library developed by a third party (external company).  
+> The external company may implement the datastore using various heterogeneous technologies, e.g., a simple file on the filesystem or a NoSQL database (e.g., MongoDB), etc.  
+> When designing the solution, consider that different installations might require different technologies (e.g., file-based in one case, NoSQL DB in another).
 
-### DATI ACCESSORI
+Therefore, evaluate:
+- What kind of abstraction should be implemented for the library to support a potentially evolving path where different implementations using different technologies for the external datastore will be developed and used.
+- What requirements/specifications should be requested/provided to the external company that will develop the persistent datastore management libraries.
+
+
+### DETAIL
+
+- **Objective:**
+    - Develop an application that:
+        - Reads CSV files from a directory.
+        - Converts the data into JSON-like dictionaries.
+        - Saves them into a datastore using an external library provided by third parties,
+          which exposes a persistence management service.
+
+- **Design Requirements:**
+    - Clearly separate:
+        - CSV file parsing.
+        - Call modeling (CallLog as an OOP entity).
+        - Datastore access interface.
+
+
+### CONSTRAINTS
+
+- Carry out a **design phase** before developing the application. You are free to choose the method of describing the design, which will be reviewed with the tutors before starting development activities.
+- Use an **object-oriented design approach**; in particular, aim for a **modular design** based on the **"separation of concerns"** paradigm.
+- A simple design could be based on:
+    - A table defining each class that makes up the application, along with a textual description of the responsibilities of each class.
+    - A description, even textual, of the **macro-interactions** expected between the classes.
+- Try to structure the source code in a way that is consistent with the modularity of the design.
+- The use of ChatGPT is allowed **only** for:
+    - Specific support related to language syntax.
+    - Use of Python libraries for reading CSV files and handling JSON dictionaries.
+    - Learning about general OO topics (e.g., modularity/separation of concerns).
+    - Using a Python development environment (IDE).
+- **ChatGPT is NOT allowed** for defining the **overall structure** of the application.
+
+### RATIONALE OF THE EXERCISE
+
+- Experiment with object-oriented design techniques.
+- Experiment with setting up a development environment and defining the software structure.
+- Experiment with simple techniques for data acquisition and parsing.
+- Experiment with simple techniques for data modeling and transformation into JSON-serializable dictionaries.
+- Experiment with defining interactions with components developed by third parties.
+
+### ACCESSORY DATA
+
 <details>
-    <summary>Esempio di contenuto CSV:</summary> 
-        timestamp,caller,receiver,duration,status,uniqueCallReference<br>
-        2025-05-14T10:23:00,1234567890,0123456789,120,successfully_completed,AABBCCDD<br> 
-        2025-05-14T10:24:00,2345678901,3456789012,0,called_busy,EEFFGGHH
+    <summary>Example of CSV content:</summary> 
+    timestamp,caller,receiver,duration,status,uniqueCallReference<br>
+    2025-05-14T10:23:00,1234567890,0123456789,120,successfully_completed,AABBCCDD<br> 
+    2025-05-14T10:24:00,2345678901,3456789012,0,called_busy,EEFFGGHH
 </details>
 
-### SPUNTI INIZIALI
-Tentare di identificare le 4 entità principali che costituiscono l'applicazione e indirizzare il principio di "separation of conerns" astraendo utilizzando un design object oriented queste 4 entità principali
+### INITIAL SUGGESTIONS
+
+Try to identify the 4 main entities that make up the application and apply the principle of **"separation of concerns"** by abstracting these 4 main entities using an object-oriented design.
