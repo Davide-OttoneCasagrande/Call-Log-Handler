@@ -12,6 +12,7 @@ Version | Data | Author(s)| Notes
 0 | 25/05/20 | Davide Ottone Casagrande | First Versionn of the document. Document Template
 0.1 | 25/05/20 | Davide Ottone Casagrande | added introduction, and project constraints
 1 | 25/05/21 | Davide Ottone Casagrande | added Class diagramm & description
+1.1 | 25/05/26 | Davide Ottone Casagrande | modified and approved Class diagramm & description
 
 ## Table of Content
 
@@ -28,6 +29,8 @@ Version | Data | Author(s)| Notes
     1. [Structural Diagrams](#sd)
         1. [Class Diagram](#cd)
             1. [Class Description](#cd-description)
+2. [Object Diagram](#od)
+3. [Dynamic Models](#dm)
 
 ##  <a name="intro"></a>  1 Introduction
 Design, implement, and demonstrate a simple "demo" application developed using the Python programming language that performs the following functionalities:
@@ -82,28 +85,21 @@ a list of json callLog class objects exposed by an interface
 ## <a name="struct"></a>  3 Structure
 
 ### <a name="sd"></a>  3.1 Structural Diagrams
-<details> 
-    <summary> Put a summary of the section
-    </summary>
-    <p>This sub section should describe ...</p>
-</details>
 
 #### <a name="cd"></a>  3.1.1 Class diagram
 ::: mermaid
 classDiagram
-
-    CSVLoader ..|> LogCollector
+    CSVLoader ..> LogCollector
     LogCollector *-- CallLog
     LogCollector -- IToDataStore
 
     class CSVLoader {
-        +CSVLoader(filePath)
+        +CSVLoader(filePath): list
     }
 
     class LogCollector {
         list CallLogs 
         +__init__(df)
-        +tojson()
     }
 
     class CallLog {
@@ -114,9 +110,11 @@ classDiagram
         str status
         str UniqueCallReference
         +__init__()
+        +tojson(): json
     }
 
     class IToDataStore {
+    +insert(CallLog)
     }
 :::
 ##### <a name="cd-description"></a>  3.1.1.1 Class Description
@@ -126,7 +124,6 @@ classDiagram
     - instaciable class
     - each intance rapresent one log
 - LogCollectionToJson
-    - instaciable class
-    - build a list of CallLogs by instancing a obj for each log
+    - build a list of CallLogs
 - IToDataStore
     - interface that expose the list for third party software
