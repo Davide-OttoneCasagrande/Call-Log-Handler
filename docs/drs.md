@@ -13,7 +13,7 @@ Version | Data | Author(s)| Notes
 0.1 | 25/05/20 | Davide Ottone Casagrande | added introduction, and project constraints
 1 | 25/05/21 | Davide Ottone Casagrande | added Class diagramm & description
 1.1 | 25/05/26 | Davide Ottone Casagrande | modified and approved Class diagramm & description
-
+1.2 | 25/05/26 | Davide Ottone Casagrande | added sequence diagram (dynamic model)
 ## Table of Content
 
 1. [Introduction](#intro)
@@ -40,9 +40,9 @@ Design, implement, and demonstrate a simple "demo" application developed using t
 - Structure the data into JSON dictionaries.
 - Persist this data in an external datastore.
 
-> It is **not necessary** to implement the external datastore itself, as it will be managed by a library developed by a third party (external company).  
-> The external company may implement the datastore using various heterogeneous technologies, e.g., a simple file on the filesystem or a NoSQL database (e.g., MongoDB), etc.  
-> When designing the solution, consider that different installations might require different technologies (e.g., file-based in one case, NoSQL DB in another).
+>- It is **not necessary** to implement the external datastore itself, as it will be managed by a library developed by a third party (external company).  
+>- The external company may implement the datastore using various heterogeneous technologies, e.g., a simple file on the filesystem or a NoSQL database (e.g., MongoDB), etc.  
+>- When designing the solution, consider that different installations might require different technologies (e.g., file-based in one case, NoSQL DB in another).
 
 Therefore, evaluate:
 - What kind of abstraction should be implemented for the library to support a potentially evolving path where different implementations using different technologies for the external datastore will be developed and used.
@@ -94,12 +94,12 @@ classDiagram
     LogCollector -- IToDataStore
 
     class CSVLoader {
-        +CSVLoader(filePath): list
+        +CSVLoader(filePath) list
     }
 
     class LogCollector {
         list CallLogs 
-        +__init__(df)
+        +__init__()
     }
 
     class CallLog {
@@ -109,13 +109,14 @@ classDiagram
         int duration
         str status
         str UniqueCallReference
-        +__init__()
-        +tojson(): json
+        +__init__(str)
+        +tojson() json
     }
 
-    class IToDataStore {
-    +insert(CallLog)
-    }
+    class IToDataStore
+    <<interface>> IToDataStore
+    IToDataStore : insert(CallLog)
+    
 :::
 ##### <a name="cd-description"></a>  3.1.1.1 Class Description
 - CSVLoader
@@ -127,3 +128,17 @@ classDiagram
     - build a list of CallLogs
 - IToDataStore
     - interface that expose the list for third party software
+
+#### <a name="od"></a>  3.1.2 Object diagram
+
+#### <a name="dm"></a>  3.2 Dynamic Models
+::: mermaid
+sequenceDiagram
+LogCollector->>+CSVLoader: load CSV file
+CSVLoader-->>-LogCollector: string list
+create participant CallLog
+LogCollector->>+CallLog: Instance
+LogCollector->>CallLog: call toJson()
+CallLog-->>-LogCollector: answer
+LogCollector->>+IToDataStore:insert
+:::
