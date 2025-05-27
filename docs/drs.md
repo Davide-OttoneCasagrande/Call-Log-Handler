@@ -89,11 +89,11 @@ a list of json callLog class objects exposed by an interface
 #### <a name="cd"></a>  3.1.1 Class diagram
 ::: mermaid
 classDiagram
-    CSVLoader ..> LogCollector
+    Loader ..> LogCollector
     LogCollector *-- CallLog
     LogCollector -- IToDataStore
 
-    class CSVLoader {
+    class Loader {
         +CSVLoader(filePath) list
     }
 
@@ -110,7 +110,7 @@ classDiagram
         str status
         str UniqueCallReference
         +__init__(str)
-        +tojson() json
+        +__json__() json
     }
 
     class IToDataStore
@@ -119,8 +119,8 @@ classDiagram
     
 :::
 ##### <a name="cd-description"></a>  3.1.1.1 Class Description
-- CSVLoader
-    - load the csv file given a filePath
+- Loader
+    - load the logs from an external source  filePath
 - CallLog
     - instaciable class
     - each intance rapresent one log
@@ -134,11 +134,11 @@ classDiagram
 #### <a name="dm"></a>  3.2 Dynamic Models
 ::: mermaid
 sequenceDiagram
-LogCollector->>+CSVLoader: load CSV file
-CSVLoader-->>-LogCollector: string list
+LogCollector->>+Loader: load from CSV file
+Loader-->>-LogCollector: string list
 create participant CallLog
 LogCollector->>+CallLog: Instance
-LogCollector->>CallLog: call toJson()
+LogCollector->>CallLog: call __json__()
 CallLog-->>-LogCollector: answer
 LogCollector->>+IToDataStore:insert
 :::
