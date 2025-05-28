@@ -9,11 +9,13 @@
 
 Version | Data | Author(s)| Notes
 ---------|------|--------|------
-0 | 25/05/20 | Davide Ottone Casagrande | First Versionn of the document. Document Template
+0.0 | 25/05/20 | Davide Ottone Casagrande | First Versionn of the document. Document Template
 0.1 | 25/05/20 | Davide Ottone Casagrande | added introduction, and project constraints
-1 | 25/05/21 | Davide Ottone Casagrande | added Class diagramm & description
+1.0 | 25/05/21 | Davide Ottone Casagrande | added Class diagramm & description
 1.1 | 25/05/26 | Davide Ottone Casagrande | modified and approved Class diagramm & description
 1.2 | 25/05/26 | Davide Ottone Casagrande | added sequence diagram (dynamic model)
+1.3 | 25/05/27 | Davide Ottone Casagrande |  modified and approved sequence diagram (dynamic model)
+
 ## Table of Content
 
 1. [Introduction](#intro)
@@ -116,7 +118,6 @@ classDiagram
     class IToDataStore
     <<interface>> IToDataStore
     IToDataStore : insert(CallLog)
-    
 :::
 ##### <a name="cd-description"></a>  3.1.1.1 Class Description
 - Loader
@@ -135,10 +136,11 @@ classDiagram
 ::: mermaid
 sequenceDiagram
 LogCollector->>+Loader: load from CSV file
-Loader-->>-LogCollector: string list
 create participant CallLog
-LogCollector->>+CallLog: Instance
-LogCollector->>CallLog: call __json__()
-CallLog-->>-LogCollector: answer
+Loader->>+CallLog: Instance
+CallLog-->>-Loader: answer
+Loader-->>-LogCollector: list of Callog obj
+LogCollector->>+CallLog: call __json__()
+CallLog-->>-LogCollector: list of json 
 LogCollector->>+IToDataStore:insert
 :::
