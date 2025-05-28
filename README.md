@@ -69,3 +69,8 @@ Therefore, evaluate:
 ### INITIAL SUGGESTIONS
 
 Try to identify the 4 main entities that make up the application and apply the principle of **"separation of concerns"** by abstracting these 4 main entities using an object-oriented design.
+
+
+### Extra modules
+
+build a module to casually generate a collection of logs to test the program.
