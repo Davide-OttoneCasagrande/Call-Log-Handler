@@ -1,4 +1,4 @@
-import IToDataStore as interface
+import iToDataStore as interface
 import configparser
 import os
 import json

@@ -1,8 +1,8 @@
 import configparser
 import os
-import Loader as loader
-import CallLog as callLog
-import ToDataStore as toDataStore # TODO implement IToDataStore as ToDataStore elsewhere
+import loader
+import callLog
+import toDataStore # TODO implement IToDataStore as ToDataStore elsewhere
 
 def logCollector( file_path: str = None):
     """

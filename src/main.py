@@ -1,4 +1,4 @@
-import LogCollector as logCollector
+import logCollector
 from src_logs_Generator import logCSVGen as fileGen
 
 def main(num_entries: int = None, file_path: str = None):

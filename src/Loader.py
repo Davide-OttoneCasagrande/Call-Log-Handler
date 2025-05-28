@@ -1,5 +1,5 @@
 from datetime import datetime
-import CallLog as callLog
+import callLog
 
 def CSVLoader(file_path:str) -> list[callLog.CallLog]:
     """
