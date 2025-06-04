@@ -1,5 +1,5 @@
 #test data
-log.csv
+*00_logs.csv
 exportedLogs.json
 
 # Byte-compiled / optimized / DLL files

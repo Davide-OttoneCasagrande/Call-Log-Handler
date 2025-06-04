@@ -16,6 +16,7 @@ Version | Data | Author(s)| Notes
 1.2 | 25/05/26 | Davide Ottone Casagrande | added sequence diagram (dynamic model)
 1.3 | 25/05/27 | Davide Ottone Casagrande | modified and approved sequence diagram (dynamic model)
 2.0 | 25/05/27 | Davide Ottone Casagrande | updated structure drs.md and written new system modules
+2.1 | 04/06/27 | Davide Ottone Casagrande | Separated generation logic into its own module and restructured project for stricter OOP design
 
 ## Table of Content
 
@@ -125,26 +126,26 @@ File paths for input and output are managed through a configuration file, enabli
    ::: mermaid
 
 flowchart TD
-    id0[main]
-    id1[logCSVGen]
-    id2[randomLogs]
-    id3[logCollector]
-    id4[loader]
-    id5[callLog]
-    id6[IToDataStore]
 
-    A@{ shape: circle, label: "Start" } --> id0
-    id0 --> id1
-    id1--> id2
-    id2 -.-> id1
-    id1 -.-> id0
-    id0 --> id3
-    id3 --> id4
-    id4 --> id5
-    id5 -.-> id4
-    id4 -.-> id3
-    id3 --> id6
-    id6 --> stop
+    B0[logCSVGen]
+    B1[randomLogs]
+
+    A@{ shape: circle, label: "Start" } --> A0
+    B@{ shape: circle, label: "Start" } --> B0
+    B0 --> B1
+    B1-->  Bs@{ shape: circle, label: "stop" } 
+
+    A0[main]
+    A1[loader]
+    A2[logCollector]
+    A3[callLog]
+    A4['temp'DataStore]
+
+    A0 --> A1
+    A1 --> A3
+    A2 --> A4
+    A3 --> A2
+    A4 --> As@{ shape: circle, label: "stop" } 
 :::
 
 ### <a name="interfaces"></a>  3.2 System Interfaces
@@ -166,40 +167,45 @@ a list of json callLog class objects exposed by an interface
 #### <a name="cd"></a>  4.1.1 Class diagram
 ::: mermaid
 classDiagram
-    Loader ..> LogCollector
+    CallLogLoader ..> CallLog : instantiate
     LogCollector *-- CallLog
-    LogCollector -- IToDataStore
+    LogCollector -- DataStore
+    IDataStore ..|> DataStore : implements
 
-    class Loader {
-        +CSVLoader(filePath) list
-    }
-
-    class LogCollector {
-        list CallLogs 
-        +__init__()
-    }
 
     class CallLog {
-        datetime timestamp
-        str caller
-        str receiver
-        int duration
-        str status
-        str UniqueCallReference
-        +__init__(str)
-        +__json__() json
+        -datetime timestamp
+        -str caller
+        -str receiver
+        -int duration
+        -str status
+        -str uniqueCallReference
+        +to_json__() str
     }
+   
+    class CallLogLoader {
+        -Path folder_path
+        +list[CallLog] callLogs
+        -__load_csv_files()
+    }
 
-    class IToDataStore
-    <<interface>> IToDataStore
-    IToDataStore : insert(CallLog)
+    class LogCollector {
+        +list[CallLog] logs
+        +to_json__() list[str]
+    }
+    
+    class IDataStore {
+        <<interface>>
+        +insert(list[str])
+    }
+
+    class DataStore { }
 :::
 
 ##### <a name="cd-description"></a>  4.1.1.1 Class Description
-- Loader
+- CallLogLoader
     - load the logs from an external source  filePath
 - CallLog
-    - instaciable class
     - each intance rapresent one log
 - LogCollectionToJson
     - build a list of CallLogs
@@ -211,15 +217,27 @@ classDiagram
 
 #### <a name="dm"></a>  4.2 Dynamic Models
 ::: mermaid
-sequenceDiagram
-LogCollector->>+Loader: load from CSV file
-create participant CallLog
-Loader->>+CallLog: Instance
-CallLog-->>-Loader: answer
-Loader-->>-LogCollector: list of Callog obj
-LogCollector->>+CallLog: call __json__()
-CallLog-->>-LogCollector: list of json 
-LogCollector->>+IToDataStore:insert
+ sequenceDiagram
+    participant Main
+
+    Main->>+Main: Load configuration
+
+    create participant CallLogLoader 
+    Main->>+CallLogLoader: Initialize with folder_path
+    CallLogLoader->>CallLogLoader: Load CSV files
+    CallLogLoader->>CallLogLoader: Create CallLog instances
+    CallLogLoader-->>-Main: Return callLogs list
+
+    create participant LogCollector
+    Main->>+LogCollector: Initialize with callLogs list
+    LogCollector->>LogCollector: Convert logs to JSON
+    LogCollector-->>-Main: Return JSON list
+
+    create participant DataStore
+    Main->>+DataStore: Initialize with export_file_path
+    DataStore->>DataStore: Insert JSON list into file
+    DataStore-->>-Main: Log collection successfully exported 
+
 :::
 
 ## <a name="sys-module-1"></a>  5 System Module 2: Random logs generator
@@ -230,32 +248,54 @@ LogCollector->>+IToDataStore:insert
 #### <a name="cd"></a>  5.1.1 Class diagram
 ::: mermaid
 classDiagram
-    LogCSVGen *-- RandomLogs
+    Logsfile *-- Call
+    
+class Call {
+        -str timestamp
+        -str caller
+        -str receiver
+        -int duration
+        -str status
+        -str uniqueCallReference
+        +__str__() : str
+    }
 
-    class LogCSVGen {
-        +gererate_random_logFile(int num_entities)
-    }
-
-    class RandomLogs {
-        +list[str] logs 
-        +__init__()
-    }
+    class Logsfile {
+        -list~str~ logs
+        -int deltaT
+        -int number_of_logs
+        +__generate_random_timestamps(startingHour: datetime) : list[str]
+    }
 :::
 
 #### <a name="cd-description"></a>  5.1.1.1 Class Description
-- LogCSVGen
-    - write a file .csv of logs with consistent format
-- RandomLogs
-    - generate a list of random logs
+- Call
+    - generate a random log
+- Logsfile
+    - collect a list of random logs
 
 #### <a name="od"></a>  5.1.2 Object diagram
 
 
 #### <a name="dm"></a>  5.2 Dynamic Models
 :::mermaid
-sequenceDiagram
-Main->>logCSVGen: load from CSV file
-create participant randomLogs
-logCSVGen->>+randomLogs: Instance
-randomLogs-->>-logCSVGen: answer
+ sequenceDiagram
+    participant logCSVGen
+    logCSVGen->>logCSVGen: loading config
+    logCSVGen->>logCSVGen: random generation of number_of_files
+
+    loop until iteration == number_of_files
+    create participant Logsfile
+    logCSVGen->>+Logsfile: random generation of a single Logsfile
+    Logsfile->>+Logsfile: random generation of number_of_calls
+    loop until iteration == number_of_calls
+    create participant Call
+    Logsfile->>+Call: random generation of a single Call
+    Call->>Call: random generation of the attributes
+    Call-->>-Logsfile:adding log to the collection
+    end
+
+    Logsfile-->>-logCSVGen:returning list[Call]
+    logCSVGen->>FileSystem: saving Logsfile as .CSV
+    end
 :::
