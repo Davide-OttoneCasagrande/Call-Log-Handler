@@ -21,7 +21,7 @@ class LogCollector:
         Returns:
             list[str]: List of JSON-encoded call logs.
         """
-        return [log.__json__() for log in self.logs]
+        return [log.to_json__() for log in self.logs]
     
 if __name__ == "__main__":
     """

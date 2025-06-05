@@ -65,7 +65,7 @@ def load_config() -> dict:
         raise ValueError("Export file path is not provided in the config file.")
     return {
     "folder_path": str(folder),
-    "export_file_path": str(Path(export_file_path)).resolve()
+    "export_file_path": str(Path(export_file_path).resolve())
     }
 
 if __name__ == "__main__":
