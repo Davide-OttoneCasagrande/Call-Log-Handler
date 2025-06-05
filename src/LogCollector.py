@@ -1,69 +1,48 @@
-import configparser
-import os
-import loader
 import callLog
-import toDataStore # TODO implement IToDataStore as ToDataStore elsewhere
 
-def logCollector( file_path: str = None):
+class LogCollector:
     """
-    Collect logs and send them to the data store.
-
-    Args:
-        file_path (str, optional): Path to the log file. If not provided, read from config.
+    A class to collect and serialize call logs.
     """
 
-    logs: list[dict] = []
-    logs = _initializeLogs(file_path)
-    logStrings:list[str] = __json__(logs)
-    toDataStore.ToDataStore.insert(logStrings) # TODO implement IToDataStore as ToDataStore elsewhere
+    def __init__(self, logs: list[callLog.CallLog]):
+        """
+        Initialize the LogCollector with a list of CallLog instances.
 
-def _initializeLogs(file_path: str = None)-> list[callLog.CallLog]:
-    """
-    Load and parse logs from a CSV file.
+        Args:
+            logs (list[CallLog]): List of call log objects.
+        """
+        self.logs: list[dict] = logs
 
-    Args:
-        file_path (str, optional): Path to the log file.
+    def to_json__(self) -> list[str]:
+        """
+        Convert the list of CallLog instances to a list of JSON strings.
 
-    Returns:
-        list[CallLog]: Parsed call logs.
-
-    Raises:
-        ValueError: If path is missing or no logs found.
-        FileNotFoundError: If file does not exist.
-    """
-
-    if not file_path:
-        config = configparser.ConfigParser()
-        config.read(os.path.join("src", "data", "config.ini"))
-        file_path = config.get('Settings', 'file_path', fallback=None)           
-        if not file_path:
-            raise ValueError("logs File path is not provided and could not be read from config.")
-    
-    file_path = os.path.abspath(os.path.normpath(file_path))
-    if not os.path.isfile(file_path):
-        raise FileNotFoundError(f"File not found at the specified path: {file_path}")
-    
-    logs: list = loader.CSVLoader(file_path)
-    if not logs:
-        raise ValueError("No logs found in the provided file path.")
-    
-    return logs
-
-def __json__(logs:list[callLog.CallLog]) -> list[dict]:
-    """
-    Convert logs to a list of JSON-serializable dictionaries.
-
-    Args:
-        logs (list[CallLog]): List of call logs.
-
-    Returns:
-        list[dict]: JSON-serializable logs.
-    """
-
-    return [log.__json__() for log in logs]
+        Returns:
+            list[str]: List of JSON-encoded call logs.
+        """
+        return [log.__json__() for log in self.logs]
     
 if __name__ == "__main__":
     """
-    Run the log collector using default or configured file path.
+    Example usage of the LogCollector class.
     """
-    logCollector()
+    # This block is not functional without actual CallLog instances.
+    # Here's a placeholder example:
+    from datetime import datetime
+
+    sample_logs = [
+        callLog.CallLog(
+            timestamp=datetime.now(),
+            caller="0123456789",
+            receiver="6789012345",
+            duration=120,
+            status="successefully_completed",
+            uniqueCallReference="abc123cwefwqt"
+            )
+    ]
+
+    collector = LogCollector(sample_logs)
+    print("Collected logs:")
+    for log_json in collector.to_json__():
+        print(log_json)

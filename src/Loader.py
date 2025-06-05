@@ -1,65 +1,56 @@
 from datetime import datetime
+from pathlib import Path
 import callLog
 
-def CSVLoader(file_path:str) -> list[callLog.CallLog]:
+class CallLogLoader:
     """
-    Load a CSV file and return its content as CallLog objects.
-
-    Args:
-        file_path (str): Path to the CSV file.
-
-    Returns:
-        list[CallLog]: List of CallLog instances.
+    Loads call logs from CSV files in a specified folder and converts them into CallLog objects.
     """
 
-    import csv
-    logStrings: list[dict] = []
-    with open(file_path, mode='r', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            logStrings.append(row)
 
-    callLogs: callLog.CallLog = _CallLogBulkInstancer(logStrings)
-    
-    #logs: list[dict] = _bulkToJson(callLogs)
-    
-    return callLogs
+    def __init__(self, folder_path: str):
+        """
+        Initialize the CallLogLoader with a folder path and load the call logs.
 
-def _CallLogBulkInstancer(logStrings: list[dict]) -> list[callLog.CallLog]:
-    """
-    Convert a list of dictionaries to CallLog instances.
+        Args:
+            folder_path (str): Path to the folder containing call log files.
+        """
+        self.__folder_path = Path(folder_path)
+        self.callLogs = []
+        self.__load_csv_files()
 
-    Args:
-        logStrings (list[dict]): Raw log data.
+    def __load_csv_files(self):
+        """
+        Load all CSV files in the folder and parse their contents into CallLog objects.
+        """
+        import csv
+        log_entries: list[dict] = []
+        csv_files = sorted(self.__folder_path.glob('*.csv'))
 
-    Returns:
-        list[CallLog]: List of CallLog objects.
-    """
+        for csv_file in csv_files:
+            with open(csv_file, mode='r', encoding='utf-8') as file:
+                reader = csv.DictReader(file)
+                for row in reader:
+                    log_entries.append(row)
 
-    CallLogs:list[callLog.CallLog] = []
-    for log in logStrings:
-        CallLogs.append(callLog.CallLog(
-            timestamp=datetime.fromisoformat(log['timestamp']),
-            caller=log['caller'],
-            receiver=log['receiver'],
-            duration=int(log['duration']),
-            status=log['status'],
-            uniqueCallReference=log['uniqueCallReference']
-        ))
-    return CallLogs
+        self.__create_call_log_instances(log_entries)
 
-def _bulkToJson(callLogs: list[callLog.CallLog]) -> list[dict]:
-    """
-    Convert CallLog objects to JSON-serializable dictionaries.
+    def __create_call_log_instances(self, log_entries: list[dict]):
+        """
+        Convert a list of dictionaries to CallLog instances and store them.
 
-    Args:
-        callLogs (list[CallLog]): List of CallLog objects.
-
-    Returns:
-        list[dict]: List of dictionaries.
-    """
-    
-    logs: list[dict] = []
-    for log in callLogs:
-        logs.append(log.__json__())
-    return logs
+        Args:
+            logStrings (list[dict]): List of dictionaries representing raw log data.
+        """
+        for log in log_entries:
+            try:
+                self.callLogs.append(callLog.CallLog(
+                    timestamp=datetime.fromisoformat(log['timestamp']),
+                    caller=log['caller'],
+                    receiver=log['receiver'],
+                    duration=int(log['duration']),
+                    status=log['status'],
+                    uniqueCallReference=log['uniqueCallReference']
+                ))
+            except Exception as e:
+                print(f"Error parsing log entry: {log}. Error: {e}")
