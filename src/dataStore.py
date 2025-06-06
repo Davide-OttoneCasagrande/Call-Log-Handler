@@ -1,13 +1,13 @@
 import iDataStore as interface
-import json
 import os
 
 class DataStore(interface.IDataStore):
     """
-    Temporary implementation of IToDataStore for testing.
+    A simple implementation of the IDataStore interface for testing purposes.
 
-    Saves a list of JSON strings to a file specified by the configuration.
+    Appends individual JSON-formatted log entries to a specified output file.
     """
+
     def __init__(self, file_path: str):
         """
         Initialize the DataStore instance.
@@ -17,14 +17,13 @@ class DataStore(interface.IDataStore):
         """
         self.file_path = file_path
 
-    def insert(self, jsonList: list[str]):
+    def insert(self, jsonLog: str):
         """
-        Write the list of JSON strings to the specified file.
+        Appends a single JSON-formatted log entry to the output file.
 
         Args:
-            jsonList (list[str]): List of JSON-formatted strings to be saved.
+            jsonLog (str): A JSON-formatted string representing a call log entry
         """
-
         self.file_path = os.path.abspath(os.path.normpath(self.file_path))
-        with open(self.file_path, 'w', encoding='utf-8') as json_file:
-            json.dump(jsonList, json_file, indent=4, ensure_ascii=False)
+        with open(self.file_path, 'a', encoding='utf-8') as json_file:
+            json_file.write(jsonLog + '\n')

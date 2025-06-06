@@ -17,6 +17,7 @@ Version | Data | Author(s)| Notes
 1.3 | 25/05/27 | Davide Ottone Casagrande | modified and approved sequence diagram (dynamic model)
 2.0 | 25/05/27 | Davide Ottone Casagrande | updated structure drs.md and written new system modules
 2.1 | 04/06/27 | Davide Ottone Casagrande | Separated generation logic into its own module and restructured project for stricter OOP design
+2.2 | 04/06/27 | Davide Ottone Casagrande | refactored system module 1 around python generator (yield statemment)
 
 ## Table of Content
 
@@ -137,15 +138,11 @@ flowchart TD
 
     A0[main]
     A1[loader]
-    A2[logCollector]
-    A3[callLog]
-    A4['temp'DataStore]
+    A3['temp'DataStore]
 
     A0 --> A1
-    A1 --> A3
-    A2 --> A4
-    A3 --> A2
-    A4 --> As@{ shape: circle, label: "stop" } 
+    A1 --> A3 
+    A3 --> As@{ shape: circle, label: "stop" } 
 :::
 
 ### <a name="interfaces"></a>  3.2 System Interfaces
@@ -167,10 +164,11 @@ a list of json callLog class objects exposed by an interface
 #### <a name="cd"></a>  4.1.1 Class diagram
 ::: mermaid
 classDiagram
-    CallLogLoader ..> CallLog : instantiate
-    LogCollector *-- CallLog
-    LogCollector -- DataStore
+
     IDataStore ..|> DataStore : implements
+    CallLogLoader --> CallLog : loads
+    Main --> CallLogLoader : uses
+    Main --> DataStore : uses 
 
 
     class CallLog {
@@ -180,19 +178,15 @@ classDiagram
         -int duration
         -str status
         -str uniqueCallReference
-        +to_json__() str
+        +__init__(datetime, str, str, int, str, str)
+        +to_json() str
     }
    
     class CallLogLoader {
         -Path folder_path
-        +list[CallLog] callLogs
+        +__init__(str)
         -__load_csv_files()
     }
-
-    class LogCollector {
-        +list[CallLog] logs
-        +to_json__() list[str]
-    }
     
     class IDataStore {
         <<interface>>
@@ -200,6 +194,11 @@ classDiagram
     }
 
     class DataStore { }
+
+    
+class Main {
+        +main(int)
+    }
 :::
 
 ##### <a name="cd-description"></a>  4.1.1.1 Class Description
@@ -207,8 +206,6 @@ classDiagram
     - load the logs from an external source  filePath
 - CallLog
     - each intance rapresent one log
-- LogCollectionToJson
-    - build a list of CallLogs
 - IToDataStore
     - interface that expose the list for third party software
 
@@ -218,25 +215,32 @@ classDiagram
 #### <a name="dm"></a>  4.2 Dynamic Models
 ::: mermaid
  sequenceDiagram
+    actor User
     participant Main
 
-    Main->>+Main: Load configuration
+    User->>+Main: Execute main()
+    Main->>Main: Load configuration
 
     create participant CallLogLoader 
-    Main->>+CallLogLoader: Initialize with folder_path
-    CallLogLoader->>CallLogLoader: Load CSV files
-    CallLogLoader->>CallLogLoader: Create CallLog instances
-    CallLogLoader-->>-Main: Return callLogs list
-
-    create participant LogCollector
-    Main->>+LogCollector: Initialize with callLogs list
-    LogCollector->>LogCollector: Convert logs to JSON
-    LogCollector-->>-Main: Return JSON list
+    Main->>CallLogLoader: Initialize with folder_path
 
     create participant DataStore
-    Main->>+DataStore: Initialize with export_file_path
-    DataStore->>DataStore: Insert JSON list into file
-    DataStore-->>-Main: Log collection successfully exported 
+    Main->>DataStore: Initialize with export_file_path
+
+    loop for each row for each file
+    Main->>+CallLogLoader: Load CSV file
+    create participant CallLog
+    CallLogLoader->>CallLog: Create CallLog instances
+    CallLogLoader-->>-Main: yield
+
+    Main->>+DataStore: Insert logs to configured datastore
+    DataStore--XCallLog: give me the json
+    destroy CallLog
+    CallLog->>DataStore: 
+    Main-->>Main: Log progress when indicated
+    end
+    
+    Main-->>-User: Log collection successfully exported
 
 :::
 

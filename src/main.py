@@ -1,33 +1,40 @@
 from configparser import ConfigParser
 from pathlib import Path
-import logCollector
 import loader
 import dataStore
 
-def main():
+def main( length_between_logging:int = 100):
     """
-    Main function to run the log collection and export process.
+    Executes the log collection and export pipeline.
 
     Steps:
     1. Load configuration from the config file.
     2. Load call logs from the specified folder.
-    3. Collect logs using the logCollector module.
-    4. Export the collected logs to a JSON file using the dataStore module.
+    3. Iterates through each log and stores it using the DataStore module.
+    4. Logs progress every `length_between_logging` entries.
+
+    Args:
+        length_between_logging (int): Number of logs to process before logging progress.
+            Default is 100.
     """
 
     config:dict = load_config()
-
-    print("Collecting logs from the file system...")
     files = loader.CallLogLoader(config["folder_path"])
-    collection = logCollector.LogCollector(files.callLogs)
-    print("Log collection completed successfully.")
-    
-    print("Exporting log collection to JSON file...")
     db = dataStore.DataStore(config["export_file_path"])
-    db.insert(collection.to_json__())
+    
+    print("Starting pipeline...")
+    logs_since_last_log:int = 0
+    log_batches_completed:int = 0
+    for row in files.load_csv_files():
+        db.insert(row.to_json())
+        logs_since_last_log+= 1
+        if logs_since_last_log==length_between_logging:
+            print(f"{log_batches_completed*length_between_logging:} logs processed, continuing...")
+            log_batches_completed += 1
+            logs_since_last_log = 0
     print("Log collection successfully exported.")
     
-def load_config() -> dict:
+def load_config() -> dict[str, str]:
     """
     Loads and validates configuration settings from the config.ini file.
 

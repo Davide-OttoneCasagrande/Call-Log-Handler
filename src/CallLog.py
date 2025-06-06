@@ -40,7 +40,7 @@ class CallLog:
             "UniqueCallReference": self.uniqueCallReference
         }
 
-    def to_json__(self) -> str:
+    def to_json(self) -> str:
         """
         Convert the CallLog instance to a JSON string.
 
