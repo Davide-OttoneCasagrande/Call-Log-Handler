@@ -73,4 +73,6 @@ Try to identify the 4 main entities that make up the application and apply the p
 
 ### Extra modules
 
-build a module to casually generate a collection of logs to test the program.
+- Create a module to randomly generate a collection of logs for testing the program.
+- Refactor the code to adopt a generator-based approach using the yield statement.
+- Create the dataStore module to insert the logs into an Elasticsearch node running in Docker.
