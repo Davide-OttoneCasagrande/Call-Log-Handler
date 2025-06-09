@@ -225,7 +225,7 @@ class Main {
     Main->>CallLogLoader: Initialize with folder_path
 
     create participant DataStore
-    Main->>DataStore: Initialize with export_file_path
+    Main->>DataStore: Initialize with export_path
 
     loop for each row for each file
     Main->>+CallLogLoader: Load CSV file

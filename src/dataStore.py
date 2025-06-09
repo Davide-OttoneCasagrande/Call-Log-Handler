@@ -1,29 +1,49 @@
+from elasticsearch import Elasticsearch
 import iDataStore as interface
-import os
 
 class DataStore(interface.IDataStore):
     """
-    A simple implementation of the IDataStore interface for testing purposes.
-
-    Appends individual JSON-formatted log entries to a specified output file.
+    A implementation of the IDataStore interface for a elasticsearch collection.
     """
 
-    def __init__(self, file_path: str):
+    def __init__(self, export_path: str, index_name: str):
         """
         Initialize the DataStore instance.
-        
+
         Args:
-            file_path (str): Path to the output JSON file.
+            export_path (str): URL to the Elasticsearch instance.
+            index_name (str): Name of the Elasticsearch index.
         """
-        self.file_path = file_path
+        self.es = Elasticsearch(export_path, verify_certs=False)
+        self.index_name: str = index_name
+        self.index_exists = self.es.indices.exists(index=index_name)
+
+    def create_mapping(self, mapping: dict):
+        """
+        Creates a new Elasticsearch index with the specified mapping.
+
+        This method initializes the index in the connected Elasticsearch instance
+        using the provided mapping schema. It also updates the internal state to
+        reflect that the index now exists.
+
+        Args:
+            mapping (dict): A dictionary defining the index mapping schema.
+
+        Raises:
+            elasticsearch.ElasticsearchException: If index creation fails.
+        """
+        self.es.indices.create(index=self.index_name, body=mapping)
+        self.index_exists = True
+        print(f"Index '{self.index_name}' created.")
 
     def insert(self, jsonLog: str):
         """
-        Appends a single JSON-formatted log entry to the output file.
+        Indexes a single JSON-formatted log entry into the Elasticsearch index.
 
         Args:
-            jsonLog (str): A JSON-formatted string representing a call log entry
+            jsonLog (str): A JSON-formatted string representing a call log entry.
+            
+        Raises:
+            elasticsearch.ElasticsearchException: If indexing fails.
         """
-        self.file_path = os.path.abspath(os.path.normpath(self.file_path))
-        with open(self.file_path, 'a', encoding='utf-8') as json_file:
-            json_file.write(jsonLog + '\n')
+        self.es.index(index=self.index_name, body=jsonLog)

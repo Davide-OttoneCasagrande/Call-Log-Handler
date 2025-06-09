@@ -1,0 +1,12 @@
+{
+    "mappings": {
+        "properties": {
+            "timestamp": {"type": "date"},
+            "caller": {"type": "keyword"},
+            "receiver": {"type": "keyword"},
+            "duration": {"type": "integer"},
+            "status": {"type": "keyword"},
+            "UniqueCallReference": {"type": "keyword"}
+        }
+    }
+}

@@ -1,7 +1,9 @@
 from configparser import ConfigParser
 from pathlib import Path
-import loader
+from typing import Any
 import dataStore
+import loader
+import json
 
 def main( length_between_logging:int = 100):
     """
@@ -20,8 +22,12 @@ def main( length_between_logging:int = 100):
 
     config:dict = load_config()
     files = loader.CallLogLoader(config["folder_path"])
-    db = dataStore.DataStore(config["export_file_path"])
-    
+    db = dataStore.DataStore(config["export_path"],config["index_name"])
+    if not db.index_exists:
+        if config["mapping"] is None:
+            raise ValueError("Mapping configuration is missing in the config file, index created empty.")
+        db.create_mapping(config["mapping"])
+        print(f"Index '{config['index_name']}' doesn't exists, using config mapping.")    
     print("Starting pipeline...")
     logs_since_last_log:int = 0
     log_batches_completed:int = 0
@@ -34,21 +40,31 @@ def main( length_between_logging:int = 100):
             logs_since_last_log = 0
     print("Log collection successfully exported.")
     
-def load_config() -> dict[str, str]:
+def load_config() -> dict[str, Any]:
     """
     Loads and validates configuration settings from the config.ini file.
 
     Returns:
         dict: A dictionary containing validated configuration values:
             - folder_path (str): Path to the folder containing log CSV files.
-            - export_file_path (str): Path to the output JSON file.
+            - export_path (str): URL of the Elasticsearch instance.
+            - index_name (str): Name of the Elasticsearch index.
+            - mapping (dict or None): Mapping schema loaded from a JSON file, if provided.
 
     Raises:
-        FileNotFoundError: If the config file or required CSV files are missing.
+        FileNotFoundError: If required files are missing.
         ValueError: If required config values are missing.
         NotADirectoryError: If the folder path is not a valid directory.
     """
-
+    def require_config_key(section: str, key: str) -> str:
+        """
+        Helper function to ensure a config key exists and is not empty.
+        """
+        value = config.get(section, key, fallback=None)
+        if not value:
+            raise ValueError(f"missing required config value: [{section}]{key}.")
+        return value
+        
     config_path = Path("src/data/config.ini")
     if not config_path.is_file():
         raise FileNotFoundError(f"Config file not found at: {config_path}")
@@ -56,23 +72,30 @@ def load_config() -> dict[str, str]:
     config = ConfigParser()
     config.read(config_path)
 
-    folder_path = config.get('Settings', 'folder_path', fallback=None)
-    if not folder_path:
+    folder = Path(require_config_key('Settings', 'folder_path')).resolve()
+    if not folder:
         raise ValueError("Folder path is not provided in the config file.")
-
-    folder = Path(folder_path).resolve()
     if not folder.is_dir():
         raise NotADirectoryError(f"The specified folder path is not a directory: {folder}")
-
     if not any(folder.glob("*.csv")):
         raise FileNotFoundError(f"No CSV files found in the specified folder: {folder}")
 
-    export_file_path = (config.get('Settings', 'export_file_path', fallback=None))
-    if not export_file_path:
-        raise ValueError("Export file path is not provided in the config file.")
+    export_path = require_config_key('Settings', 'export_path')    
+    index_name = require_config_key('Settings', 'index_name')
+
+    mapping = require_config_key('Settings', 'mapping')
+    if mapping:
+        mapping_path = Path(mapping).resolve()
+        if not mapping_path.is_file():
+            raise FileNotFoundError(f"Mapping file not found at: {mapping_path}")
+        with open(mapping_path, "r") as f:
+            mapping = json.load(f)
+
     return {
     "folder_path": str(folder),
-    "export_file_path": str(Path(export_file_path).resolve())
+    "export_path": export_path,
+    "index_name": index_name,
+    "mapping": mapping
     }
 
 if __name__ == "__main__":
