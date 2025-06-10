@@ -1,24 +1,22 @@
 import random
-import string
-from datetime import datetime
+import shortuuid
 
 class Call:
-    def __init__(self,timestamp: str, uniqueCallReferenceLength: int=8 ):
+    def __init__(self,timestamp: str):
         """
         Initialize a Call instance with a timestamp and generate random call details.
 
         Args:
             timestamp (str): The timestamp of the call.
-            uniqueCallReferenceLength (int): Length of the unique call reference string. Default is 8.
         """
         self.timestamp: str = timestamp
-
+        self.uniqueCallReference: str = str(shortuuid.uuid())
+        
         isGroupCall: bool =False
         if random.random() < 0.75:  # 75% chance to be a group call
             isGroupCall = True
         self.__generate_random_participants(isGroupCall)
         self.__generate_random_callStatus(isGroupCall)
-        self.__generate_random_uniqueCallReference(uniqueCallReferenceLength)
 
     def __generate_random_participants(self, isGroupCall: bool) -> str:
         """
@@ -101,16 +99,6 @@ class Call:
                     self.status = f"{self.status}other"
             else:
                 self.status = f"{self.status}other"
-            
-    def __generate_random_uniqueCallReference(self, length:int):
-        """
-        Generates a random alphanumeric string and assigns it to the uniqueCallReference attribute.
-
-        Args:
-            length (int): Length of the string.
-        """
-        characters = string.ascii_letters + string.digits # A-Z, a-z, 0-9
-        self.uniqueCallReference:str = ''.join(random.choices(characters, k=length))
 
     def __str__(self):
         """

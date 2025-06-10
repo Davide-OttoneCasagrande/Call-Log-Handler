@@ -39,7 +39,7 @@ class Logsfile:
         ]
         timestamps.sort()
         return [timestamp.strftime("%Y-%m-%dT%H:%M:%S") for timestamp in timestamps]
-
+    
 if __name__ == "__main__":
     logs = Logsfile(datetime.now(), timedelta(hours=1))
     print("Log file generated successfully.")
