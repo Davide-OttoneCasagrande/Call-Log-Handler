@@ -2,7 +2,26 @@ from datetime import datetime, timedelta
 from configparser import ConfigParser
 from pathlib import Path
 import randomLogs
+import logging
 import random
+import sys
+
+
+def setup_logging(log_path: str) -> None:
+    """Configure logging with proper formatting and handlers."""
+    log_file = Path(log_path)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+
 
 def generate_random_log_files():
     """
@@ -12,19 +31,24 @@ def generate_random_log_files():
     Each file represents logs for one hour, starting from the current hour
     and going backwards in time based on the configured delta.
     """
+
     configs = load_config()
     file_path = configs["folder_path"]
     number_of_files = random.randint(12, 48)
     current_hour = datetime.now().replace(minute=0, second=0, microsecond=0)
     deltaT = datetime.now().replace(microsecond=0) - current_hour
-    
-    # Generate logs for the current partial hour
-    random_single_logFile(current_hour, deltaT, file_path)
 
+    # Generate logs for the current partial hour
+    logging.debug(
+        f"Generating {number_of_files} log files starting from {current_hour}.")
+    random_single_logFile(current_hour, deltaT, file_path)
     # Generate logs for previous full hours
     for i in range(number_of_files):
-        timestamp = current_hour - timedelta(hours=i * int(configs["delta_T_for_file"]))
+        timestamp = current_hour - \
+            timedelta(hours=i * int(configs["delta_T_for_file"]))
         random_single_logFile(timestamp, timedelta(hours=1), file_path)
+    logging.info("Logs generation completed.")
+
 
 def load_config() -> dict:
     """
@@ -40,30 +64,39 @@ def load_config() -> dict:
         ValueError: If required config values are missing.
         NotADirectoryError: If the folder path is invalid.
     """
-    def require_config_key(section: str, key: str, fallback=None) -> str:
-        """
-        Helper function to ensure a config key exists and is not empty.
-        """
-        value = config.get(section, key, fallback=fallback)
-        if not value:
-            raise ValueError(f"missing required config value: [{section}]{key}.")
-        return value
-    
+    def get_required_config(parser: ConfigParser, section: str, key: str, fallback=None) -> str:
+        """Get required configuration value or raise ValueError."""
+        value = parser.get(section, key, fallback=fallback)
+        if not value or not value.strip():
+            error_msg: str = f"Missing required configuration: [{section}] {key}"
+            logging.critical(error_msg)
+            raise ValueError(error_msg)
+        return value.strip()
+
     config_path = Path("src/data/config.ini")
     if not config_path.is_file():
-        raise FileNotFoundError(f"Config file not found at: {config_path}")
-    config = ConfigParser()
-    config.read(config_path)
+        error_msg: str = f"Config file not found at: {config_path}"
+        logging.critical(error_msg)
+        raise FileNotFoundError(error_msg)
 
-    folder_path = require_config_key('Settings', 'folder_path')
+    parser = ConfigParser()
+    parser.read(config_path)
+
+    folder_path = get_required_config(parser, 'generator', 'folder_path')
     folder = Path(folder_path).resolve()
     if not folder.is_dir():
-        raise NotADirectoryError(f"The specified folder path is not a directory: {folder}")
-    delta_T_for_file = require_config_key('Settings', 'delta_T_for_file', 1)
+        error_msg: str = f"The specified folder path is not a directory: {folder}"
+        logging.critical(error_msg)
+        raise NotADirectoryError()
+
+    delta_T_for_file = get_required_config(
+        parser, 'generator', 'delta_T_for_file', 1)
+
     return {
         "folder_path": str(folder),
         "delta_T_for_file": delta_T_for_file
     }
+
 
 def random_single_logFile(starting_hour: datetime, deltaT: timedelta, file_path: str):
     """
@@ -80,8 +113,15 @@ def random_single_logFile(starting_hour: datetime, deltaT: timedelta, file_path:
     with open(full_path, 'w', newline='') as file:
         for log in log_collection.logs:
             file.write(log + '\n')
+    logging.debug(f"Generated log file: {full_path}")
+
 
 if __name__ == "__main__":
     # Entry point for generating random log files.
-    generate_random_log_files()
-    print("Logs generation completed.")
+    setup_logging("src/logs/generator.log")
+    try:
+        generate_random_log_files()
+    except Exception as e:
+        error_message: str = f"file random generation failed: {e}"
+        logging.error(error_message, exc_info=True)
+        sys.exit(1)

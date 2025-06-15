@@ -1,102 +1,108 @@
-from configparser import ConfigParser
 from pathlib import Path
-from typing import Any
+import logging
+import sys
+
 import dataStore
 import loader
-import json
 
-def main( length_between_logging:int = 100):
+
+def setup_logging(log_path: str) -> None:
+    """Configure logging with proper formatting and handlers."""
+    log_file = Path(log_path)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        handlers=[
+            logging.FileHandler(log_file),
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+
+
+def main(length_between_logging: int = 100) -> None:
     """
     Executes the log collection and export pipeline.
 
     Steps:
     1. Load configuration from the config file.
     2. Load call logs from the specified folder.
-    3. Iterates through each log and stores it using the DataStore module.
-    4. Logs progress every `length_between_logging` entries.
+    3. Process each log and store it using the DataStore module
+    4. Log progress every `length_between_logging` entries
 
     Args:
         length_between_logging (int): Number of logs to process before logging progress.
             Default is 100.
-    """
-
-    config:dict = load_config()
-    files = loader.CallLogLoader(config["folder_path"])
-    db = dataStore.DataStore(config["export_path"],config["index_name"])
-    if not db.index_exists:
-        if config["mapping"] is None:
-            raise ValueError("Mapping configuration is missing in the config file, index created empty.")
-        db.create_mapping(config["mapping"])
-        print(f"Index '{config['index_name']}' doesn't exists, using config mapping.")    
-    print("Starting pipeline...")
-    logs_since_last_log:int = 0
-    log_batches_completed:int = 0
-    for row in files.load_csv_files():
-        db.insert(row.to_json())
-        logs_since_last_log+= 1
-        if logs_since_last_log==length_between_logging:
-            print(f"{log_batches_completed*length_between_logging:} logs processed, continuing...")
-            log_batches_completed += 1
-            logs_since_last_log = 0
-    print("Log collection successfully exported.")
-    
-def load_config() -> dict[str, Any]:
-    """
-    Loads and validates configuration settings from the config.ini file.
-
-    Returns:
-        dict: A dictionary containing validated configuration values:
-            - folder_path (str): Path to the folder containing log CSV files.
-            - export_path (str): URL of the Elasticsearch instance.
-            - index_name (str): Name of the Elasticsearch index.
-            - mapping (dict or None): Mapping schema loaded from a JSON file, if provided.
 
     Raises:
-        FileNotFoundError: If required files are missing.
-        ValueError: If required config values are missing.
-        NotADirectoryError: If the folder path is not a valid directory.
+        SystemExit: If configuration loading or pipeline execution fails.
     """
-    def require_config_key(section: str, key: str) -> str:
-        """
-        Helper function to ensure a config key exists and is not empty.
-        """
-        value = config.get(section, key, fallback=None)
-        if not value:
-            raise ValueError(f"missing required config value: [{section}]{key}.")
-        return value
-        
-    config_path = Path("src/data/config.ini")
-    if not config_path.is_file():
-        raise FileNotFoundError(f"Config file not found at: {config_path}")
+    try:
+        config: dict = load_config()
+        setup_logging(config["log_path"])
 
-    config = ConfigParser()
-    config.read(config_path)
+        logging.info("Initializing log processing pipeline...")
 
-    folder = Path(require_config_key('Settings', 'folder_path')).resolve()
-    if not folder:
-        raise ValueError("Folder path is not provided in the config file.")
-    if not folder.is_dir():
-        raise NotADirectoryError(f"The specified folder path is not a directory: {folder}")
-    if not any(folder.glob("*.csv")):
-        raise FileNotFoundError(f"No CSV files found in the specified folder: {folder}")
+        files = loader.CallLogLoader(config["folder_path"])
+        db = dataStore.DataStore(
+            config["export_path"], config["elasticsearch_address"], config["index_name"])
 
-    export_path = require_config_key('Settings', 'export_path')    
-    index_name = require_config_key('Settings', 'index_name')
+        if not db.index_exists:
+            if config["mapping"] is None:
+                logging.warning(
+                    "Mapping configuration is missing in the config file, index created empty.")
+            db.create_mapping(config["mapping"])
+            logging.info(
+                f"Index '{config['index_name']}' doesn't exists, using config mapping.")
 
-    mapping = require_config_key('Settings', 'mapping')
-    if mapping:
-        mapping_path = Path(mapping).resolve()
-        if not mapping_path.is_file():
-            raise FileNotFoundError(f"Mapping file not found at: {mapping_path}")
-        with open(mapping_path, "r") as f:
-            mapping = json.load(f)
+        logging.info("Starting log processing...")
+        total_processed: int = process_logs(files, db, length_between_logging)
 
-    return {
-    "folder_path": str(folder),
-    "export_path": export_path,
-    "index_name": index_name,
-    "mapping": mapping
-    }
+        success_message: str = f"Successfully processed {total_processed} logs"
+        logging.info(success_message)
+        print(success_message)
+
+    except Exception as e:
+        error_message: str = f"Pipeline failed: {e}"
+        logging.error(error_message, exc_info=True)
+        print(f"Error: {error_message}")
+        sys.exit(1)
+
+
+def process_logs(files: loader.CallLogLoader, db: dataStore.DataStore, batch_size: int) -> int:
+    """
+    Process and insert logs into the database.
+
+    Args:
+        files: CallLogLoader instance for reading CSV files
+        db: DataStore instance for database operations
+        batch_size: Number of logs to process before logging progress
+
+    Returns:
+        Total number of logs processed
+    """
+    logs_processed = 0
+    batch_count = 0
+
+    try:
+        for row in files.load_csv_files():
+            db.insert(row.to_json())
+            logs_processed += 1
+
+            if logs_processed % batch_size == 0:
+                batch_count += 1
+                logging.info(
+                    f"Processed {logs_processed} logs (batch {batch_count} completed)")
+
+    except Exception as e:
+        logging.error(
+            f"Error processing logs at entry {logs_processed + 1}: {e}")
+        raise
+
+    return logs_processed
+
 
 if __name__ == "__main__":
     main()
