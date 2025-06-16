@@ -4,23 +4,10 @@ import sys
 
 import dataStore
 import loader
+import config
 
-
-def setup_logging(log_path: str) -> None:
-    """Configure logging with proper formatting and handlers."""
-    log_file = Path(log_path)
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-        handlers=[
-            logging.FileHandler(log_file),
-            logging.StreamHandler(sys.stdout)
-        ]
-    )
-
+logger = logging.getLogger(__name__)
+#logger.setLevel(logging.DEBUG)
 
 def main(length_between_logging: int = 100) -> None:
     """
@@ -40,33 +27,32 @@ def main(length_between_logging: int = 100) -> None:
         SystemExit: If configuration loading or pipeline execution fails.
     """
     try:
-        config: dict = load_config()
-        setup_logging(config["log_path"])
+        settings = config.Config()
 
-        logging.info("Initializing log processing pipeline...")
+        logger.info("Initializing log processing pipeline...")
 
-        files = loader.CallLogLoader(config["folder_path"])
+        files = loader.CallLogLoader(settings["folder_path"])
         db = dataStore.DataStore(
-            config["export_path"], config["elasticsearch_address"], config["index_name"])
+            settings["export_path"], settings["elasticsearch_address"], settings["index_name"])
 
         if not db.index_exists:
-            if config["mapping"] is None:
-                logging.warning(
+            if settings["mapping"] is None:
+                logger.warning(
                     "Mapping configuration is missing in the config file, index created empty.")
-            db.create_mapping(config["mapping"])
-            logging.info(
-                f"Index '{config['index_name']}' doesn't exists, using config mapping.")
+            db.create_mapping(settings["mapping"])
+            logger.info(
+                f"Index '{settings['index_name']}' doesn't exists, using config mapping.")
 
-        logging.info("Starting log processing...")
+        logger.info("Starting log processing...")
         total_processed: int = process_logs(files, db, length_between_logging)
 
         success_message: str = f"Successfully processed {total_processed} logs"
-        logging.info(success_message)
+        logger.info(success_message)
         print(success_message)
 
     except Exception as e:
         error_message: str = f"Pipeline failed: {e}"
-        logging.error(error_message, exc_info=True)
+        logger.error(error_message, exc_info=True)
         print(f"Error: {error_message}")
         sys.exit(1)
 
@@ -93,11 +79,11 @@ def process_logs(files: loader.CallLogLoader, db: dataStore.DataStore, batch_siz
 
             if logs_processed % batch_size == 0:
                 batch_count += 1
-                logging.info(
+                logger.info(
                     f"Processed {logs_processed} logs (batch {batch_count} completed)")
 
     except Exception as e:
-        logging.error(
+        logger.error(
             f"Error processing logs at entry {logs_processed + 1}: {e}")
         raise
 

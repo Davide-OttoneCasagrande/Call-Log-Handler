@@ -87,9 +87,9 @@ class Config:
                         mapping = json.load(f)
                 except json.JSONDecodeError as e:
                     logging.warning(
-                        f"Invalid JSON in mapping file {path}: {e}")
+                        f"Invalid JSON in mapping file {path}: {e}", exc_info=True)
                 except Exception as e:
-                    logging.warning(f"Error reading mapping file {path}: {e}")
+                    logging.warning(f"Error reading mapping file {path}: {e}", exc_info=True)
         config["mapping"] = mapping
 
         has_elasticsearch = config.get("elasticsearch_address")
@@ -216,10 +216,10 @@ def _load_mapping_file(mapping_path: str) -> Optional[Dict[str, Any]]:
         logging.info(f"Loaded mapping from: {path}")
         return mapping
     except json.JSONDecodeError as e:
-        logging.error(f"Invalid JSON in mapping file {path}: {e}")
+        logging.error(f"Invalid JSON in mapping file {path}: {e}", exc_info=True)
         return None
     except Exception as e:
-        logging.error(f"Error reading mapping file {path}: {e}")
+        logging.error(f"Error reading mapping file {path}: {e}", exc_info=True)
         return None
 
 
