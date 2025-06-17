@@ -12,8 +12,7 @@ class DataStore(interface.IDataStore):
     Implementation of the IDataStore interface for storing logs in an Elasticsearch index or exporting them to the file system.
     """
 
-    def __init__(self, export_path: str | None = None, elasticsearch_address: str | None = None, index_name: str | None = None):
-    def __init__(self, export_path: str | None = None, elasticsearch_address: str | None = None, index_name: str | None = None):
+    def __init__(self, export_path: str | None = None, elasticsearch_address: str | None = None, index_name: str | None = None) -> None:
         """
         Initialize the DataStore instance.
 
@@ -58,7 +57,7 @@ class DataStore(interface.IDataStore):
                 logger.error(error_msg)
                 raise ValueError(error_msg)
    
-    def create_mapping(self, mapping: dict):
+    def create_mapping(self, mapping: dict) -> None:
         """
         Creates a new Elasticsearch index with the specified mapping.
 

@@ -1,11 +1,14 @@
 from datetime import datetime, timedelta
-from configparser import ConfigParser
 from pathlib import Path
-import randomLogs
-import logging
 import logging
 import random
 import sys
+import os
+
+import randomLogs
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+import config
+
 
 log_path: str = "src/logs//app.log"
 """Configuring root logger with proper formatting and handlers."""
@@ -39,9 +42,9 @@ def generate_random_log_files():
     and going backwards in time based on the configured delta.
     """
     logger.info("Starting log generation process.")
-    configs = load_config()
+    configs = config.Config("generator")
 
-    file_path = configs["folder_path"]
+    file_path = configs.folder_path
     number_of_files = random.randint(12, 48)
     current_hour = datetime.now().replace(minute=0, second=0, microsecond=0)
     deltaT = datetime.now().replace(microsecond=0) - current_hour
@@ -53,62 +56,11 @@ def generate_random_log_files():
     # Generate logs for previous full hours
     for i in range(number_of_files):
         timestamp = current_hour - \
-            timedelta(hours=i * int(configs["delta_T_for_file"]))
+            timedelta(hours=i * int(configs.delta_T_for_file))
         timestamp = current_hour - \
-            timedelta(hours=i * int(configs["delta_T_for_file"]))
+            timedelta(hours=i * int(configs.delta_T_for_file))
         random_single_logFile(timestamp, timedelta(hours=1), file_path)
     logger.info("Logs generation completed.")
-
-
-def load_config() -> dict:
-    """
-    Load and validate configuration settings from the config.ini file.
-
-    Returns:
-        dict: A dictionary containing:
-            - folder_path (str): Path to the folder for log files.
-            - delta_T_for_file (int): Time delta (in hours) between log files.
-
-    Raises:
-        FileNotFoundError: If the config file is missing.
-        ValueError: If required config values are missing.
-        NotADirectoryError: If the folder path is invalid.
-    """
-    def get_required_config(parser: ConfigParser, section: str, key: str, fallback=None) -> str:
-        """Get required configuration value or raise ValueError."""
-        value = parser.get(section, key, fallback=fallback)
-        if not value or not value.strip():
-            error_msg: str = f"Missing required configuration: [{section}] {key}"
-            logger.critical(error_msg)
-            raise ValueError(error_msg)
-        return value.strip()
-
-    config_path = Path("src/data/config.ini")
-    if not config_path.is_file():
-        error_msg: str = f"Config file not found at: {config_path}"
-        logger.critical(error_msg)
-        raise FileNotFoundError(error_msg)
-
-    parser = ConfigParser()
-    parser.read(config_path)
-
-    folder_path = get_required_config(parser, 'generator', 'folder_path')
-    folder_path = get_required_config(parser, 'generator', 'folder_path')
-    folder = Path(folder_path).resolve()
-    if not folder.is_dir():
-        error_msg: str = f"The specified folder path is not a directory: {folder}"
-        logger.critical(error_msg)
-        raise NotADirectoryError()
-
-    delta_T_for_file = get_required_config(
-        parser, 'generator', 'delta_T_for_file', 1)
-
-    return {
-        "folder_path": str(folder),
-        "delta_T_for_file": delta_T_for_file
-    }
-
-
 
 def random_single_logFile(starting_hour: datetime, deltaT: timedelta, file_path: str):
     """
