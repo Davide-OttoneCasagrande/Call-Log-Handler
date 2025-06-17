@@ -13,7 +13,6 @@ class DataStore(interface.IDataStore):
     """
 
     def __init__(self, export_path: str | None = None, elasticsearch_address: str | None = None, index_name: str | None = None):
-    def __init__(self, export_path: str | None = None, elasticsearch_address: str | None = None, index_name: str | None = None):
         """
         Initialize the DataStore instance.
 

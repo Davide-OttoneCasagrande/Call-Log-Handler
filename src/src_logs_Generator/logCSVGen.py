@@ -3,11 +3,10 @@ from configparser import ConfigParser
 from pathlib import Path
 import randomLogs
 import logging
-import logging
 import random
 import sys
 
-log_path: str = "src/logs//app.log"
+log_path: str = "src/logs//generator.log"
 """Configuring root logger with proper formatting and handlers."""
 log_file = Path(log_path)
 log_file.parent.mkdir(parents=True, exist_ok=True)
