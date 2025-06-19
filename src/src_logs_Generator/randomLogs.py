@@ -1,6 +1,10 @@
 from datetime import datetime, timedelta
+import logging
 import random
 import call
+
+logger = logging.getLogger(__name__)
+#logger.setLevel(logging.DEBUG)
 
 class Logsfile:
     """
@@ -18,10 +22,11 @@ class Logsfile:
         self.logs: list[str] = ["timestamp,caller,receiver,duration,status,uniqueCallReference"]
         self.deltaT = int(deltaT.total_seconds())
         self.number_of_logs = random.randint(100, 1000)
+        logger.debug(f"Generating {self.number_of_logs} logs over a period of {self.deltaT} seconds starting from {startingHour.isoformat()}")
         timeStamps: list[str] = self.__generate_random_timestamps(startingHour)
         for timeStamp in timeStamps:
             log = call.Call(timeStamp)
-            self.logs.append(str(log))  # Prefer str(log) over log.__str__()
+            self.logs.append(str(log))
 
     def __generate_random_timestamps(self, startingHour: datetime) -> list[str]:
         """
@@ -39,8 +44,3 @@ class Logsfile:
         ]
         timestamps.sort()
         return [timestamp.strftime("%Y-%m-%dT%H:%M:%S") for timestamp in timestamps]
-    
-if __name__ == "__main__":
-    logs = Logsfile(datetime.now(), timedelta(hours=1))
-    print("Log file generated successfully.")
-    print(logs.logs)

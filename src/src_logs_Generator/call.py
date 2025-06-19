@@ -1,6 +1,9 @@
 import random
+import logging
 import shortuuid
 
+logger = logging.getLogger(__name__)
+#logger.setLevel(logging.DEBUG)
 
 class Call:
     def __init__(self, timestamp: str) -> None:
