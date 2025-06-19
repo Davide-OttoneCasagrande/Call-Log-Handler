@@ -2,13 +2,10 @@ version: '3.8'
 
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.1
-    container_name: elasticsearch
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - bootstrap.memory_lock=true
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+    build:
+      context:  Elasticsearch/
+      dockerfile: Dockerfile
+    container_name: esn00
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -18,6 +15,32 @@ services:
       memlock:
         soft: -1
         hard: -1
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200 || exit 1"]
+      interval: 10s
+      retries: 5
+
+  devcontainer:
+    build:
+      context:  .devcontainer/
+      dockerfile: dockerfile
+    container_name: dev-container
+    volumes:
+      - /home/david/Call-Log-Handler:/workspace:cached
+    network_mode: service:elasticsearch
+    command: sleep infinity
+    depends_on:
+      - elasticsearch  # Ensures Elasticsearch starts first
+
+  kibana:
+    build:
+      context: Kibana/
+      dockerfile: Dockerfile
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
 
 volumes:
   esdata:
